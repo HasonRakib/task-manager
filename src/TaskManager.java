@@ -1,145 +1,225 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-class Task {
-    private int id;
-    private String description;
-    private boolean completed;
-    private int assignedToUserId;
-
-    public Task(int id, String description, int assignedToUserId) {
-        this.id = id;
-        this.description = description;
-        this.completed = false;
-        this.assignedToUserId = assignedToUserId;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
-
-    public int getAssignedToUserId() {
-        return assignedToUserId;
-    }
-
-    public void setAssignedToUserId(int assignedToUserId) {
-        this.assignedToUserId = assignedToUserId;
-    }
-
-    @Override
-    public String toString() {
-        return "Task{id=" + id + ", description='" + description + '\'' + ", completed=" + (completed ? "Yes" : "No") + ", assignedToUserId=" + assignedToUserId + '}';
-    }
-}
+import java.sql.*;
 
 public class TaskManager {
-    private List<Task> tasks;
-    private List<User> users;
-    private int nextTaskId;
-    private int nextUserId;
-
     public TaskManager() {
-        tasks = new ArrayList<>();
-        users = new ArrayList<>();
-        nextTaskId = 1;
-        nextUserId = 1;
+       DatabaseManager.initializeDatabase();
     }
 
-    public void addUser(String username, String password, Role role) {
-        User user = new User(nextUserId++, username, password, role);
-        users.add(user);
-    }
-
-    public Optional<User> authenticateUser(String username, String password) {
-        return users.stream()
-            .filter(user -> user.getUsername().equals(username) && user.getPassword().equals(password))
-            .findFirst();
-    }
-
+     // Task-related methods
     public void createTask(String description, int assignedToUserId) {
-        Task task = new Task(nextTaskId++, description, assignedToUserId);
-        tasks.add(task);
+        String sql = "INSERT INTO tasks(description, completed, assigned_to, status) VALUES(?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             pstmt.setString(1, description);
+             pstmt.setBoolean(2, false);
+             pstmt.setInt(3, assignedToUserId);
+             pstmt.setString(4, "Pending");
+             pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public List<Task> readTasks() {
+        String sql = "SELECT * FROM tasks";
+        List<Task> tasks = new ArrayList<>();
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Task task = new Task(
+                    rs.getInt("id"),
+                    rs.getString("description"),
+                    rs.getInt("assigned_to")
+                );
+                task.setCompleted(rs.getBoolean("completed"));
+                task.setStatus(rs.getString("status"));
+                tasks.add(task);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
         return tasks;
     }
 
     public Optional<Task> readTask(int id) {
-        return tasks.stream().filter(task -> task.getId() == id).findFirst();
+        String sql = "SELECT * FROM tasks WHERE id = ?";
+        Task task = null;
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                task = new Task(
+                    rs.getInt("id"),
+                    rs.getString("description"),
+                    rs.getInt("assigned_to")
+                );
+                task.setCompleted(rs.getBoolean("completed"));
+                task.setStatus(rs.getString("status"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return Optional.ofNullable(task);
     }
 
     public boolean updateTask(int id, String newDescription, boolean completed) {
-        Optional<Task> optionalTask = readTask(id);
-        if (optionalTask.isPresent()) {
-            Task task = optionalTask.get();
-            task.setDescription(newDescription);
-            task.setCompleted(completed);
+        String sql = "UPDATE tasks SET description = ?, completed = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newDescription);
+            pstmt.setBoolean(2, completed);
+            pstmt.setInt(3, id);
+            pstmt.executeUpdate();
             return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
+
         return false;
     }
 
     public boolean deleteTask(int id) {
-        return tasks.removeIf(task -> task.getId() == id);
+        String sql = "DELETE FROM tasks WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return false;
     }
 
     public void assignTaskToEmployee(int taskId, int employeeId) {
-        Optional<Task> optionalTask = readTask(taskId);
-        if (optionalTask.isPresent()) {
-            Task task = optionalTask.get();
-            task.setAssignedToUserId(employeeId);
-            System.out.println("Task assigned to Employee ID " + employeeId);
-        } else {
-            System.out.println("Task not found.");
+        String sql = "UPDATE tasks SET assigned_to = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, employeeId);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
     }
 
     public List<Task> readTasksByUser(int userId) {
-        return tasks.stream().filter(task -> task.getAssignedToUserId() == userId).collect(Collectors.toList());
+        String sql = "SELECT * FROM tasks WHERE assigned_to = ?";
+        List<Task> tasks = new ArrayList<>();
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             pstmt.setInt(1, userId);
+             ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Task task = new Task(
+                    rs.getInt("id"),
+                    rs.getString("description"),
+                    rs.getInt("assigned_to")
+                );
+                task.setCompleted(rs.getBoolean("completed"));
+                task.setStatus(rs.getString("status"));
+                tasks.add(task);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return tasks;
     }
 
     public void updateTaskStatus(int taskId, String status) {
-        Optional<Task> optionalTask = readTask(taskId);
-        if (optionalTask.isPresent()) {
-            Task task = optionalTask.get();
-            switch (status.toLowerCase()) {
-                case "pending":
-                    task.setCompleted(false);
-                    break;
-                case "working on it":
-                    task.setCompleted(false);
-                    break;
-                case "completed":
-                    task.setCompleted(true);
-                    break;
-                default:
-                    System.out.println("Invalid status. Please use 'Pending', 'Working on it', or 'Completed'.");
-                    return;
-            }
-            System.out.println("Task status updated.");
-            // Notify Project Manager and Admin about the status update (for now, just print messages)
-            System.out.println("Notification: Task ID " + taskId + " status updated to " + status + ".");
-        } else {
-            System.out.println("Task not found.");
+        String sql = "UPDATE tasks SET status = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
     }
+
+    // User-related methods
+     public void addUser(String username, String password, Role role) {
+        String sql = "INSERT INTO users(username, password, role) VALUES(?, ?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            pstmt.setString(3, role.name());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public Optional<User> authenticateUser(String username, String password) {
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        User user = null;
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                user = new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    Role.valueOf(rs.getString("role"))
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return Optional.ofNullable(user);
+    }
+
+    public List<User> getUsers() {
+        String sql = "SELECT * FROM users";
+        List<User> users = new ArrayList<>();
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                User user = new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    Role.valueOf(rs.getString("role"))
+                );
+                users.add(user);
+            }
+        } catch (SQLException e) {   
+        System.out.println(e.getMessage());
+        }
+    return users;
 }
+}
+
+
