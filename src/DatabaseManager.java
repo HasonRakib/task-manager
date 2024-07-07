@@ -30,7 +30,7 @@ public class DatabaseManager {
                                 "FOREIGN KEY (assigned_to) REFERENCES users(id))";
             stmt.execute(tasksTable);
 
-            // Initialize admin user
+            // Initializes the admin user( there is only one admin in this system)
             String adminUser = "INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', 'admin', 'ADMIN')";
             stmt.execute(adminUser);
 

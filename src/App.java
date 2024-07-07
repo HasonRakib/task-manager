@@ -4,48 +4,27 @@ import java.util.Scanner;
 public class App {
     private static TaskManager taskManager = new TaskManager();
     private static Scanner scanner = new Scanner(System.in);
-    private static User loggedInUser;
-
-
+   
     public static void main(String[] args) {
-        while (true) {
-            if (loggedInUser == null) {
-                showLoginMenu();;
-            } else {
-                switch (loggedInUser.getRole()) {
-                    case ADMIN:
-                        showAdminMenu();
-                        break;
-                    case PROJECT_MANAGER:
-                        showProjectManagerMenu();
-                        break;
-                    case EMPLOYEE:
-                        showEmployeeMenu();
-                        break;
-                    default:
-                        System.out.println("Unknown role.");
-                }
+        boolean exit = false;
+        while (!exit) {
+            System.out.println("Welcome to the Prodigy");
+            System.out.println("1. Login");
+            System.out.println("2. Exit");
+
+            int choice = Integer.parseInt(scanner.nextLine());
+
+            switch (choice) {
+                case 1:
+                    login();
+                    break;
+                case 2:
+                    System.out.println("Exiting...");
+                    exit = true;
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        }
-    }
-
-    private static void showLoginMenu() {
-        System.out.println("\nLogin Menu");
-        System.out.println("1. Login");
-        System.out.println("2. Exit");
-
-        int choice = Integer.parseInt(scanner.nextLine());
-
-        switch (choice) {
-            case 1:
-                login();
-                break;
-            case 2:
-                System.out.println("Exiting...");
-                System.exit(0);
-                break;
-            default:
-                System.out.println("Invalid choice. Please try again.");
         }
     }
 
@@ -56,15 +35,32 @@ public class App {
         String password = scanner.nextLine();
 
         Optional<User> user = taskManager.authenticateUser(username, password);
+
         if (user.isPresent()) {
-            loggedInUser = user.get();
-            System.out.println("Login successful!");
+            User loggedInUser = user.get();
+            boolean loggedIn = true;
+            while (loggedIn) {
+                switch (loggedInUser.getRole()) {
+                    case ADMIN:
+                        loggedIn = showAdminMenu(loggedInUser);
+                        break;
+                    case PROJECT_MANAGER:
+                        loggedIn = showProjectManagerMenu(loggedInUser);
+                        break;
+                    case EMPLOYEE:
+                        loggedIn = showEmployeeMenu(loggedInUser);
+                        break;
+                    default:
+                        System.out.println("Unknown role. Access denied.");
+                        loggedIn = false;
+                }
+            }
         } else {
-            System.out.println("Invalid credentials. Please try again.");
+            System.out.println("Invalid username or password. Please try again.");
         }
     }
-
-    private static void showAdminMenu() {
+    
+    private static boolean showAdminMenu(User user){
         while (true) {
             System.out.println("\nAdmin Menu");
             System.out.println("1. Add Project Manager");
@@ -78,7 +74,7 @@ public class App {
 
             switch (choice) {
                 case 1:
-                    addProjectManager();
+                addUser(Role.PROJECT_MANAGER);
                     break;
                 case 2:
                     viewAllUsers();
@@ -93,21 +89,20 @@ public class App {
                     assignTaskToProjectManager();
                     break;
                 case 6:
-                    return;    
+                    return false; //logging out   
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
     }
 
-    private static void addProjectManager() {
+    private static void addUser(Role role) {
         System.out.println("Enter username:");
         String username = scanner.nextLine();
         System.out.println("Enter password:");
         String password = scanner.nextLine();
-
-        taskManager.addUser(username, password, Role.PROJECT_MANAGER);
-        System.out.println("Project Manager added.");
+        taskManager.addUser(username, password, role);
+        System.out.println(role.name() + " added successfully.");
     }
 
     private static void createTask() {
@@ -120,7 +115,14 @@ public class App {
         System.out.println("Task added and assigned to Project Manager ID " + projectId);
     }
 
-    private static void showProjectManagerMenu() {
+    private static void viewAssignedTasks(User user) {
+        for (Task task : taskManager.readTasksByUser(user.getId())) {
+            System.out.println(task);
+        }
+    }
+
+    private static  boolean showProjectManagerMenu(User user) {
+        while (true) {
             System.out.println("\nProject Manager Menu");
             System.out.println("1. Add Employee");
             System.out.println("2. View All Employees");
@@ -133,35 +135,27 @@ public class App {
     
             switch (choice) {
                 case 1:
-                    addEmployee();
+                addUser(Role.EMPLOYEE);
                     break;
                 case 2:
-                    viewAllEmployees();
+                viewAllUsers();
                     break;
                 case 3:
                     assignTaskToEmployee();
                     break;
                 case 4:
-                    viewMyTasks();
+                viewAssignedTasks(user);
                     break;
                 case 5:
                     updateTaskStatus();
                     break;
                 case 6:
-                    return;
+                    return false; // logging out
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-    }
 
-    private static void addEmployee() {
-        System.out.println("Enter username:");
-        String username = scanner.nextLine();
-        System.out.println("Enter password:");
-        String password = scanner.nextLine();
-
-        taskManager.addUser(username, password, Role.EMPLOYEE);
-        System.out.println("Employee registered.");
+        }
     }
 
     private static void viewAllUsers() {
@@ -169,16 +163,7 @@ public class App {
         for (User user : taskManager.getUsers()) {
             System.out.println(user);
         }
-    }
-
-    private static void viewAllEmployees() {
-        System.out.println("All employees:");
-        for (User user : taskManager.getUsers()) {
-            if (user.getRole() == Role.EMPLOYEE) {
-                System.out.println(user);
-            }
-        }
-    }
+    } 
 
     private static void assignTaskToEmployee() {
         System.out.println("Enter task ID:");
@@ -189,38 +174,33 @@ public class App {
     }
 
     private static void viewAllTasks() {
-        System.out.println("My tasks:");
+        System.out.println("All tasks:");
         for (Task task : taskManager.readTasks()) {
             System.out.println(task);
         }
     }
 
-    private static void showEmployeeMenu() {
-        System.out.println("\nEmployee Menu");
-        System.out.println("1. View My Tasks");
-        System.out.println("2. Update Task Status");
-        System.out.println("3. Logout");
+    private static boolean showEmployeeMenu(User user)  {
+        while (true) {
+            System.out.println("\nEmployee Menu");
+            System.out.println("1. View My Tasks");
+            System.out.println("2. Update Task Status");
+            System.out.println("3. Logout");
 
-        int choice = Integer.parseInt(scanner.nextLine());
+            int choice = Integer.parseInt(scanner.nextLine());
 
-        switch (choice) {
-            case 1:
-                viewMyTasks();
-                break;
-            case 2:
-                updateTaskStatus();
-                break;
-            case 3:
-                return;
-            default:
-                System.out.println("Invalid choice. Please try again.");
-        }
-    }
-
-    private static void viewMyTasks() {
-        System.out.println("My tasks:");
-        for (Task task : taskManager.readTasksByUser(loggedInUser.getId())) {
-            System.out.println(task);
+            switch (choice) {
+                case 1:
+                    viewAssignedTasks(user);
+                    break;
+                case 2:
+                    updateTaskStatus();
+                    break;
+                case 3:
+                    return false;  // Logging out
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
         }
     }
 
