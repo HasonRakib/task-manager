@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -69,7 +70,9 @@ public class App {
             System.out.println("3. Create Task");
             System.out.println("4. View All Tasks");
             System.out.println("5. Assign Task to Project Manager");
-            System.out.println("6. Logout");
+            System.out.println("6. Delete Project Manager");
+            System.out.println("7. Delete Task");
+            System.out.println("8. Logout");
 
             int choice = Integer.parseInt(scanner.nextLine());
 
@@ -90,6 +93,12 @@ public class App {
                     assignTaskToProjectManager();
                     break;
                 case 6:
+                    deleteUser();
+                    break;
+                case 7:
+                    deleteTask();
+                    break;
+                case 8:
                     return false; // logging out   
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -111,8 +120,18 @@ public class App {
         String description = scanner.nextLine();
         System.out.println("Enter Project Manager ID to assign this task:");
         String projectManagerId = scanner.nextLine();
+        System.out.println("Enter due date (YYYY-MM-DD):");
+        String dueDateString = scanner.nextLine();
+        LocalDate dueDate;
+        try {
+            dueDate = LocalDate.parse(dueDateString); // Parse due date input
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            return;
+        }
 
-        taskManager.createTask(description, projectManagerId);
+
+        taskManager.createTask(description, projectManagerId, dueDate);
         System.out.println("Task added and assigned to Project Manager ID " + projectManagerId);
     }
 
@@ -130,7 +149,9 @@ public class App {
             System.out.println("3. Assign Task to Employee");
             System.out.println("4. View My Tasks");
             System.out.println("5. Update Task Status");
-            System.out.println("6. Logout");
+            System.out.println("6. Delete Employee");
+            System.out.println("7. Delete Task");
+            System.out.println("8. Logout");
 
             int choice = Integer.parseInt(scanner.nextLine());
 
@@ -151,6 +172,12 @@ public class App {
                     updateTaskStatus();
                     break;
                 case 6:
+                    deleteUser();
+                    break;
+                case 7:
+                    deleteTask();
+                    break;
+                case 8:
                     return false; // logging out
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -171,7 +198,17 @@ public class App {
         System.out.println("Enter Employee ID:");
         String employeeId= scanner.nextLine();
 
-        taskManager.assignTaskToEmployee(taskId, employeeId);
+        String dueDateString = scanner.nextLine();
+        @SuppressWarnings("unused")
+        LocalDate dueDate;
+        try {
+            dueDate = LocalDate.parse(dueDateString); // Parse due date input
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            return;
+        }
+
+        taskManager.assignTaskToEmployee(taskId, employeeId, null);
         System.out.println("Task assigned to Employee ID " + employeeId);
     }
 
@@ -222,7 +259,41 @@ public class App {
         System.out.println("Enter Project Manager ID:");
         String projectManagerId = scanner.nextLine();
 
-        taskManager.assignTaskToEmployee(taskId, projectManagerId);
+        System.out.print("Due Date (YYYY-MM-DD): ");
+        String dueDateString = scanner.nextLine();
+        @SuppressWarnings("unused")
+        LocalDate dueDate;
+        try {
+            dueDate = LocalDate.parse(dueDateString); // Parse due date input
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            return;
+        }
+
+        taskManager.assignTaskToEmployee(taskId, projectManagerId, null);
         System.out.println("Task assigned to Project Manager.");
     }
+
+    private static void deleteUser() {
+        System.out.println("Enter User ID to delete:");
+        String userId = scanner.nextLine();
+        boolean result = taskManager.deleteUser(userId);
+        if (result) {
+            System.out.println("User deleted successfully.");
+        } else {
+            System.out.println("Failed to delete user.");
+        }
+    }
+    
+    private static void deleteTask() {
+        System.out.println("Enter Task ID to delete:");
+        String taskId = scanner.nextLine();
+        boolean result = taskManager.deleteTask(taskId);
+        if (result) {
+            System.out.println("Task deleted successfully.");
+        } else {
+            System.out.println("Failed to delete task.");
+        }
+    }
+    
 }

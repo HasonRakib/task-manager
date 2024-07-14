@@ -14,20 +14,6 @@ public class User {
         this.userId = userId;
     }
 
-   /*  private String generateIdForRole(Role role) {
-        switch (role) {
-            case ADMIN:
-                return "ADMIN"; // No ID generation for admin
-            case PROJECT_MANAGER:
-                return UniqueIdGenerator.generateProjectManagerId();
-            case EMPLOYEE:
-                return UniqueIdGenerator.generateEmployeeId();
-            default:
-                throw new IllegalArgumentException("Unknown role: " + role);
-        }
-    }*/
-
-
     public int getId() {
         return id;
     }

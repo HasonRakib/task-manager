@@ -1,26 +1,31 @@
+import java.time.LocalDate;
+
 public class Task {
     private int id;
     private String taskId;
     private String description;
     private boolean completed;
-    private int assignedTo;
+    private String assignedTo;
     private String status;
+    private LocalDate dueDate; // New field for due date
 
-    public Task(int id, String description, boolean completed, int assignedTo, String status) {
+    public Task(int id, String description, boolean completed, String assignedTo, String status, LocalDate dueDate) {
         this.id = id;
         this.description = description;
         this.completed = completed;
         this.assignedTo = assignedTo;
         this.status = status;
+        this.dueDate = dueDate; // Initialize to null initially
     }
 
-    public Task(int id, String taskId, String description, int assignedTo) {
+    public Task(int id, String taskId, String description, String assignedTo, LocalDate dueDate) {
         this.id = id;
         this.taskId = taskId;
         this.description = description;
         this.completed = false;
         this.assignedTo = assignedTo;
         this.status = "Pending";
+        this.dueDate = null; // Initialize to null initially
     }
 
     public int getId() {
@@ -55,11 +60,11 @@ public class Task {
         this.completed = completed;
     }
 
-    public int getAssignedTo() {
+    public String getAssignedTo() {
         return assignedTo;
     }
 
-    public void setAssignedTo(int assignedTo) {
+    public void setAssignedTo(String assignedTo) {
         this.assignedTo = assignedTo;
     }
 
@@ -69,6 +74,14 @@ public class Task {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
     }
 
     @Override

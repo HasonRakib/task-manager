@@ -2,6 +2,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.sql.*;
+//import java.time.LocalDate;
+import java.time.LocalDate;
 
 public class TaskManager {
     public TaskManager() {
@@ -9,9 +11,9 @@ public class TaskManager {
     }
 
     // Task-related methods
-    public void createTask(String description, String assignedToUserId) {
+    public void createTask(String description, String assignedToUserId, LocalDate dueDate) {
         String taskId = IDGenerator.generateTaskId();
-        String sql = "INSERT INTO tasks(taskId, description, completed, assigned_to, status) VALUES(?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO tasks(taskId, description, completed, assigned_to, status, due_date) VALUES(?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -20,6 +22,7 @@ public class TaskManager {
             pstmt.setBoolean(3, false);
             pstmt.setString(4, assignedToUserId);
             pstmt.setString(5, "Pending");
+            pstmt.setString(6, dueDate.toString()); // Assuming dueDate is stored as a string in the database
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -39,10 +42,17 @@ public class TaskManager {
                     rs.getInt("id"),
                     rs.getString("taskId"),
                     rs.getString("description"),
-                    rs.getInt("assigned_to")
+                    rs.getString("assigned_to"), 
+                    null
                 );
                 task.setCompleted(rs.getBoolean("completed"));
                 task.setStatus(rs.getString("status"));
+                // Retrieve and set due date from database
+                String dueDateString = rs.getString("due_date");
+                if (dueDateString != null) {
+                LocalDate dueDate = LocalDate.parse(dueDateString);
+                task.setDueDate(dueDate);
+                } 
                 tasks.add(task);
             }
         } catch (SQLException e) {
@@ -52,13 +62,13 @@ public class TaskManager {
         return tasks;
     }
 
-    public Optional<Task> readTask(int id) {
-        String sql = "SELECT * FROM tasks WHERE id = ?";
+    public Optional<Task> readTask(String taskId) {
+        String sql = "SELECT * FROM tasks WHERE taskId = ?";
         Task task = null;
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
+            pstmt.setString(1, taskId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -66,7 +76,7 @@ public class TaskManager {
                     rs.getInt("id"),
                     rs.getString("taskId"),
                     rs.getString("description"),
-                    rs.getInt("assigned_to")
+                    rs.getString("assigned_to"), null
                 );
                 task.setCompleted(rs.getBoolean("completed"));
                 task.setStatus(rs.getString("status"));
@@ -78,14 +88,14 @@ public class TaskManager {
         return Optional.ofNullable(task);
     }
 
-    public boolean updateTask(int id, String newDescription, boolean completed) {
-        String sql = "UPDATE tasks SET description = ?, completed = ? WHERE id = ?";
+    public boolean updateTask(String taskId, String newDescription, boolean completed) {
+        String sql = "UPDATE tasks SET description = ?, completed = ? WHERE taskId = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, newDescription);
             pstmt.setBoolean(2, completed);
-            pstmt.setInt(3, id);
+            pstmt.setString(3, taskId);
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -95,12 +105,12 @@ public class TaskManager {
         return false;
     }
 
-    public boolean deleteTask(int id) {
-        String sql = "DELETE FROM tasks WHERE id = ?";
+    public boolean deleteTask(String taskId) {
+        String sql = "DELETE FROM tasks WHERE taskId = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
+            pstmt.setString(1, taskId);
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -110,13 +120,30 @@ public class TaskManager {
         return false;
     }
 
-    public void assignTaskToEmployee(String taskId, String employeeId) {
-        String sql = "UPDATE tasks SET assigned_to = ? WHERE taskId = ?";
+    public boolean deleteUser(String userId) {
+        String sql = "DELETE FROM users WHERE userId = ?";
+    
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userId);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    
+        return false;
+    }
+    
+
+    public void assignTaskToEmployee(String taskId, String employeeId, LocalDate dueDate) {
+        String sql = "UPDATE tasks SET assigned_to = ? , due_date = ? WHERE taskId = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, employeeId);//come back here later
-            pstmt.setString(2, taskId);
+            pstmt.setDate(2, Date.valueOf(dueDate)); // Convert LocalDate to SQL Date
+            pstmt.setString(3, taskId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -137,7 +164,7 @@ public class TaskManager {
                     rs.getInt("id"),
                     rs.getString("taskId"),
                     rs.getString("description"),
-                    rs.getInt("assigned_to")
+                    rs.getString("assigned_to"), null
                 );
                 task.setCompleted(rs.getBoolean("completed"));
                 task.setStatus(rs.getString("status"));

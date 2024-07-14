@@ -32,12 +32,18 @@ public class DatabaseManager {
                                 "FOREIGN KEY (assigned_to) REFERENCES users(userId))";
             stmt.execute(tasksTable);
 
+             // Add due_date column if it doesn't exist
+             String addDueDateColumn = "ALTER TABLE tasks ADD COLUMN due_date TEXT";
+             stmt.execute(addDueDateColumn);
+
             // Initializes the admin user( there is only one admin in this system)
             String adminUser = "INSERT OR IGNORE INTO users (username, password, role , userId) VALUES ('admin', 'admin', 'ADMIN', 'ADMIN_ID')";
             stmt.execute(adminUser);
 
-        } catch (SQLException e) {
+        } catch (SQLException e) {// If the error is because the column already exists, ignore it
+            if (!e.getMessage().contains("duplicate column name")) {
             System.out.println(e.getMessage());
         }
     } 
+  }
 }
