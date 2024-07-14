@@ -96,7 +96,7 @@ public class App {
                     deleteUser();
                     break;
                 case 7:
-                    deleteTask();
+                    deleteTask();//preapre for new changes on the admin menu
                     break;
                 case 8:
                     return false; // logging out   
