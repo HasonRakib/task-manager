@@ -1,5 +1,6 @@
 public class Task {
     private int id;
+    private String taskId;
     private String description;
     private boolean completed;
     private int assignedTo;
@@ -13,8 +14,9 @@ public class Task {
         this.status = status;
     }
 
-    public Task(int id, String description, int assignedTo) {
+    public Task(int id, String taskId, String description, int assignedTo) {
         this.id = id;
+        this.taskId = taskId;
         this.description = description;
         this.completed = false;
         this.assignedTo = assignedTo;
@@ -27,6 +29,14 @@ public class Task {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
     }
 
     public String getDescription() {

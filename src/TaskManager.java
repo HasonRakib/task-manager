@@ -5,20 +5,22 @@ import java.sql.*;
 
 public class TaskManager {
     public TaskManager() {
-       DatabaseManager.initializeDatabase();
+        DatabaseManager.initializeDatabase();
     }
 
-     // Task-related methods
-    public void createTask(String description, int assignedToUserId) {
-        String sql = "INSERT INTO tasks(description, completed, assigned_to, status) VALUES(?, ?, ?, ?)";
+    // Task-related methods
+    public void createTask(String description, String assignedToUserId) {
+        String taskId = IDGenerator.generateTaskId();
+        String sql = "INSERT INTO tasks(taskId, description, completed, assigned_to, status) VALUES(?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             pstmt.setString(1, description);
-             pstmt.setBoolean(2, false);
-             pstmt.setInt(3, assignedToUserId);
-             pstmt.setString(4, "Pending");
-             pstmt.executeUpdate();
+            pstmt.setString(1, taskId);
+            pstmt.setString(2, description);
+            pstmt.setBoolean(3, false);
+            pstmt.setString(4, assignedToUserId);
+            pstmt.setString(5, "Pending");
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -35,6 +37,7 @@ public class TaskManager {
             while (rs.next()) {
                 Task task = new Task(
                     rs.getInt("id"),
+                    rs.getString("taskId"),
                     rs.getString("description"),
                     rs.getInt("assigned_to")
                 );
@@ -61,6 +64,7 @@ public class TaskManager {
             if (rs.next()) {
                 task = new Task(
                     rs.getInt("id"),
+                    rs.getString("taskId"),
                     rs.getString("description"),
                     rs.getInt("assigned_to")
                 );
@@ -106,31 +110,32 @@ public class TaskManager {
         return false;
     }
 
-    public void assignTaskToEmployee(int taskId, int employeeId) {
-        String sql = "UPDATE tasks SET assigned_to = ? WHERE id = ?";
+    public void assignTaskToEmployee(String taskId, String employeeId) {
+        String sql = "UPDATE tasks SET assigned_to = ? WHERE taskId = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, employeeId);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(1, employeeId);//come back here later
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public List<Task> readTasksByUser(int userId) {
+    public List<Task> readTasksByUser(String userId) {
         String sql = "SELECT * FROM tasks WHERE assigned_to = ?";
         List<Task> tasks = new ArrayList<>();
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             pstmt.setInt(1, userId);
-             ResultSet rs = pstmt.executeQuery();
+            pstmt.setString(1, userId);
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 Task task = new Task(
                     rs.getInt("id"),
+                    rs.getString("taskId"),
                     rs.getString("description"),
                     rs.getInt("assigned_to")
                 );
@@ -145,13 +150,13 @@ public class TaskManager {
         return tasks;
     }
 
-    public void updateTaskStatus(int taskId, String status) {
-        String sql = "UPDATE tasks SET status = ? WHERE id = ?";
+    public void updateTaskStatus(String taskId, String status) {
+        String sql = "UPDATE tasks SET status = ? WHERE taskId = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, status);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -159,14 +164,24 @@ public class TaskManager {
     }
 
     // User-related methods
-     public void addUser(String username, String password, Role role) {
-        String sql = "INSERT INTO users(username, password, role) VALUES(?, ?, ?)";
+    public void addUser(String username, String password, Role role) {
+        String userId;
+        if (role == Role.PROJECT_MANAGER) {
+            userId = IDGenerator.generateProjectManagerId();
+        } else if (role == Role.EMPLOYEE) {
+            userId = IDGenerator.generateEmployeeId();
+        } else {
+            userId = "ADMIN"; // Admin ID is fixed
+        }
+
+        String sql = "INSERT INTO users(username, password, role, userId) VALUES(?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
             pstmt.setString(3, role.name());
+            pstmt.setString(4, userId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -188,8 +203,10 @@ public class TaskManager {
                     rs.getInt("id"),
                     rs.getString("username"),
                     rs.getString("password"),
-                    Role.valueOf(rs.getString("role"))
+                    Role.valueOf(rs.getString("role")),
+                    rs.getString("userId")
                 );
+                System.out.println("Logged in as: " + user.getUsername() + " (ID: " + user.getUserId() + ")");
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -211,15 +228,14 @@ public class TaskManager {
                     rs.getInt("id"),
                     rs.getString("username"),
                     rs.getString("password"),
-                    Role.valueOf(rs.getString("role"))
+                    Role.valueOf(rs.getString("role")),
+                    rs.getString("userId")
                 );
                 users.add(user);
             }
-        } catch (SQLException e) {   
-        System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
-    return users;
+        return users;
+    }
 }
-}
-
-

@@ -1,17 +1,17 @@
-
 public class User {
     private int id;
     private String username;
     private String password;
     private Role role;
+    private String userId;
    
 
-    public User(int id, String username, String password, Role role) {
+    public User(int id, String username, String password, Role role , String userId) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.role = role;
-        //this.id = generateIdForRole(role);
+        this.userId = userId;
     }
 
    /*  private String generateIdForRole(Role role) {
@@ -55,6 +55,20 @@ public class User {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+    return "User{id=" + id + ", username='" + username + "', role=" + role + '}';
+    }
+
 
 }
 

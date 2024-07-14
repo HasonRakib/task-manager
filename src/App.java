@@ -1,10 +1,11 @@
 import java.util.Optional;
 import java.util.Scanner;
 
+
 public class App {
     private static TaskManager taskManager = new TaskManager();
     private static Scanner scanner = new Scanner(System.in);
-   
+
     public static void main(String[] args) {
         boolean exit = false;
         while (!exit) {
@@ -59,8 +60,8 @@ public class App {
             System.out.println("Invalid username or password. Please try again.");
         }
     }
-    
-    private static boolean showAdminMenu(User user){
+
+    private static boolean showAdminMenu(User user) {
         while (true) {
             System.out.println("\nAdmin Menu");
             System.out.println("1. Add Project Manager");
@@ -74,7 +75,7 @@ public class App {
 
             switch (choice) {
                 case 1:
-                addUser(Role.PROJECT_MANAGER);
+                    addUser(Role.PROJECT_MANAGER);
                     break;
                 case 2:
                     viewAllUsers();
@@ -89,7 +90,7 @@ public class App {
                     assignTaskToProjectManager();
                     break;
                 case 6:
-                    return false; //logging out   
+                    return false; // logging out   
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
@@ -109,19 +110,19 @@ public class App {
         System.out.println("Enter task description:");
         String description = scanner.nextLine();
         System.out.println("Enter Project Manager ID to assign this task:");
-        int projectId = Integer.parseInt(scanner.nextLine());
+        String projectManagerId = scanner.nextLine();
 
-        taskManager.createTask(description, projectId);
-        System.out.println("Task added and assigned to Project Manager ID " + projectId);
+        taskManager.createTask(description, projectManagerId);
+        System.out.println("Task added and assigned to Project Manager ID " + projectManagerId);
     }
 
     private static void viewAssignedTasks(User user) {
-        for (Task task : taskManager.readTasksByUser(user.getId())) {
+        for (Task task : taskManager.readTasksByUser(user.getUserId())) {
             System.out.println(task);
         }
     }
 
-    private static  boolean showProjectManagerMenu(User user) {
+    private static boolean showProjectManagerMenu(User user) {
         while (true) {
             System.out.println("\nProject Manager Menu");
             System.out.println("1. Add Employee");
@@ -130,21 +131,21 @@ public class App {
             System.out.println("4. View My Tasks");
             System.out.println("5. Update Task Status");
             System.out.println("6. Logout");
-    
+
             int choice = Integer.parseInt(scanner.nextLine());
-    
+
             switch (choice) {
                 case 1:
-                addUser(Role.EMPLOYEE);
+                    addUser(Role.EMPLOYEE);
                     break;
                 case 2:
-                viewAllUsers();
+                    viewAllUsers();
                     break;
                 case 3:
                     assignTaskToEmployee();
                     break;
                 case 4:
-                viewAssignedTasks(user);
+                    viewAssignedTasks(user);
                     break;
                 case 5:
                     updateTaskStatus();
@@ -154,7 +155,6 @@ public class App {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-
         }
     }
 
@@ -163,14 +163,16 @@ public class App {
         for (User user : taskManager.getUsers()) {
             System.out.println(user);
         }
-    } 
+    }
 
     private static void assignTaskToEmployee() {
         System.out.println("Enter task ID:");
-        int taskId = Integer.parseInt(scanner.nextLine());
+        String taskId = scanner.nextLine();
         System.out.println("Enter Employee ID:");
-        int employeeId = Integer.parseInt(scanner.nextLine());
+        String employeeId= scanner.nextLine();
+
         taskManager.assignTaskToEmployee(taskId, employeeId);
+        System.out.println("Task assigned to Employee ID " + employeeId);
     }
 
     private static void viewAllTasks() {
@@ -180,7 +182,7 @@ public class App {
         }
     }
 
-    private static boolean showEmployeeMenu(User user)  {
+    private static boolean showEmployeeMenu(User user) {
         while (true) {
             System.out.println("\nEmployee Menu");
             System.out.println("1. View My Tasks");
@@ -206,7 +208,7 @@ public class App {
 
     private static void updateTaskStatus() {
         System.out.println("Enter task ID:");
-        int taskId = Integer.parseInt(scanner.nextLine());
+        String taskId = scanner.nextLine();
         System.out.println("Enter new status (Pending, Working on it, Completed):");
         String status = scanner.nextLine();
 
@@ -214,15 +216,13 @@ public class App {
         System.out.println("Task status updated.");
     }
 
-     private static void assignTaskToProjectManager() {
+    private static void assignTaskToProjectManager() {
         System.out.println("Enter task ID:");
-        int taskId = Integer.parseInt(scanner.nextLine());
+        String taskId = scanner.nextLine();
         System.out.println("Enter Project Manager ID:");
-        int projectManagerId = Integer.parseInt(scanner.nextLine());
+        String projectManagerId = scanner.nextLine();
 
         taskManager.assignTaskToEmployee(taskId, projectManagerId);
         System.out.println("Task assigned to Project Manager.");
     }
-
-   
 }
