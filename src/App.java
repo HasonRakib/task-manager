@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -44,6 +45,7 @@ public class App {
             while (loggedIn) {
                 switch (loggedInUser.getRole()) {
                     case ADMIN:
+                        displayNotifications(loggedInUser); // Display notifications for admin
                         loggedIn = showAdminMenu(loggedInUser);
                         break;
                     case PROJECT_MANAGER:
@@ -61,6 +63,23 @@ public class App {
             System.out.println("Invalid username or password. Please try again.");
         }
     }
+
+     private static void displayNotifications(User user) {
+        if (user.getRole() == Role.ADMIN) {
+            List<Notification> notifications = taskManager.getNotifications();
+            for (Notification notification : notifications) {
+                if (!notification.isRead()) {
+                    System.out.println("\nNew notification: " + notification.getMessage());
+                    taskManager.markNotificationAsRead(notification);
+                }
+            }
+            try {
+                Thread.sleep(60000); // 1 minute delay
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+     }
 
     private static boolean showAdminMenu(User user) {
         while (true) {

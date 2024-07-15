@@ -6,6 +6,8 @@ import java.sql.*;
 import java.time.LocalDate;
 
 public class TaskManager {
+    private List<Notification> notifications = new ArrayList<>();
+
     public TaskManager() {
         DatabaseManager.initializeDatabase();
     }
@@ -177,6 +179,24 @@ public class TaskManager {
         return tasks;
     }
 
+    public void addNotification(String message) {
+        notifications.add(new Notification(message));
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void markNotificationsAsRead() {
+        for (Notification notification : notifications) {
+            notification.setRead(true);
+        }
+    }
+
+    public void markNotificationAsRead(Notification notification) {
+        notification.setRead(true);
+    }
+
     public void updateTaskStatus(String taskId, String status) {
         String sql = "UPDATE tasks SET status = ? WHERE taskId = ?";
 
@@ -185,6 +205,11 @@ public class TaskManager {
             pstmt.setString(1, status);
             pstmt.setString(2, taskId);
             pstmt.executeUpdate();
+
+            if ("Completed".equalsIgnoreCase(status)) {
+                String message = "Task with ID " + taskId + " has been completed.";
+                addNotification(message);
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
