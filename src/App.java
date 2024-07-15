@@ -168,9 +168,11 @@ public class App {
             System.out.println("3. Assign Task to Employee");
             System.out.println("4. View My Tasks");
             System.out.println("5. Update Task Status");
-            System.out.println("6. Delete Employee");
-            System.out.println("7. Delete Task");
-            System.out.println("8. Logout");
+            System.out.println("6. Add Comment to Task");
+            System.out.println("7. Add Attachment to Task");
+            System.out.println("8. Delete Employee");
+            System.out.println("9. Delete Task");
+            System.out.println("10. Logout");
 
             int choice = Integer.parseInt(scanner.nextLine());
 
@@ -191,13 +193,19 @@ public class App {
                     updateTaskStatus();
                     break;
                 case 6:
-                    deleteUser();
+                    addCommentToTask();
                     break;
                 case 7:
-                    deleteTask();
+                    addAttachmentToTask();
                     break;
                 case 8:
-                    return false; // logging out
+                    deleteUser();
+                    break;
+                case 9:
+                    deleteTask();
+                    break;
+                case 10:
+                    return false; // logging out        
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
@@ -236,6 +244,26 @@ public class App {
         for (Task task : taskManager.readTasks()) {
             System.out.println(task);
         }
+    }
+
+    private static void addCommentToTask() {
+        System.out.println("Enter Task ID:");
+        String taskId = scanner.nextLine();
+        System.out.println("Enter Comment:");
+        String comment = scanner.nextLine();
+    
+        taskManager.addCommentToTask(taskId, comment);
+        System.out.println("Comment added to Task ID " + taskId);
+    }
+
+    private static void addAttachmentToTask() {
+        System.out.println("Enter Task ID:");
+        String taskId = scanner.nextLine();
+        System.out.println("Enter Attachment (File Path or URL):");
+        String attachment = scanner.nextLine();
+    
+        taskManager.addAttachmentToTask(taskId, attachment);
+        System.out.println("Attachment added to Task ID " + taskId);
     }
 
     private static boolean showEmployeeMenu(User user) {

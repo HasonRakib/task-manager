@@ -290,4 +290,27 @@ public class TaskManager {
         }
         return users;
     }
+
+    public void addCommentToTask(String taskId, String comment) {
+        String sql = "UPDATE tasks SET comments = ? WHERE taskId = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, comment);
+            pstmt.setString(2, taskId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void addAttachmentToTask(String taskId, String attachment) {
+        String sql = "UPDATE tasks SET attachments = ? WHERE taskId = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, attachment);
+            pstmt.setString(2, taskId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 }

@@ -8,6 +8,9 @@ public class Task {
     private String assignedTo;
     private String status;
     private LocalDate dueDate; // New field for due date
+    private String comments; // New field for comments
+    private String attachments; // New field for attachments
+
 
     public Task(int id, String description, boolean completed, String assignedTo, String status, LocalDate dueDate) {
         this.id = id;
@@ -84,8 +87,26 @@ public class Task {
         this.dueDate = dueDate;
     }
 
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
+
+    public String getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(String attachments) {
+        this.attachments = attachments;
+    }
+
     @Override
     public String toString() {
-        return "Task{id=" + id + ", description='" + description + '\'' + ", completed=" + (completed ? "Yes" : "No") + ", assignedTo=" + assignedTo + '}';
-    }
+        return "Task{Task ID = " + taskId + " \ndescription= " + description + " \ncompleted= " + (completed ? "Yes" : "No") + "\nassignedTo= " + assignedTo +"\nStatus: " + status + "\nDue Date: " + dueDate + 
+               "\nComments: " + comments + "\nAttachments: " + attachments;
+    } 
+    
 }
