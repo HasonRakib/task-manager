@@ -33,22 +33,30 @@ public class DatabaseManager {
             stmt.execute(tasksTable);
 
              // Add new columns if they doesn't exist
-             String addDueDateColumn = "ALTER TABLE tasks ADD COLUMN due_date TEXT";// this is for adding the duedate column
-             stmt.execute(addDueDateColumn);
-             String addcommentsColumn = "ALTER TABLE tasks ADD COLUMN comments TEXT";//this is for adding a comments column
-             stmt.execute(addcommentsColumn);
-             String addattachmentsColumn = "ALTER TABLE tasks ADD COLUMN attachments TEXT";//this is for adding a comments column
-             stmt.execute(addattachmentsColumn);
+            addColumnIfNotExists(stmt, "tasks", "due_date", "TEXT");
+            addColumnIfNotExists(stmt, "tasks", "comments", "TEXT");
+            addColumnIfNotExists(stmt, "tasks", "attachments", "TEXT");
 
 
             // Initializes the admin user( there is only one admin in this system)
             String adminUser = "INSERT OR IGNORE INTO users (username, password, role , userId) VALUES ('admin', 'admin', 'ADMIN', 'ADMIN_ID')";
             stmt.execute(adminUser);
 
-        } catch (SQLException e) {// If the error is because the column already exists, ignore it
-            if (!e.getMessage().contains("duplicate column name")) {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-    } 
-  }
+    }
+    
+    private static void addColumnIfNotExists(Statement stmt, String tableName, String columnName, String columnType) throws SQLException {
+        try {
+            String addColumnQuery = "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnType;
+            stmt.execute(addColumnQuery);
+        } catch (SQLException e) {
+            // Ignore the error if the column already exists
+            if (!e.getMessage().contains("duplicate column name")) {
+                throw e;
+            }
+        }
+    }
+  
 }
