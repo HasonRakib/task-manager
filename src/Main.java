@@ -12,7 +12,6 @@ import javafx.util.Duration;
 public class Main extends Application {
 
     private TaskManager taskManager = new TaskManager(); 
-    
     private Stage primaryStage;
 
     @Override
@@ -46,13 +45,13 @@ public class Main extends Application {
 
             Platform.runLater(() -> {
                 splashStage.close();
-                initWelcomeScene();
+                primaryStage.setScene(initWelcomeScene()); // Use the initWelcomeScene method to get the scene
                 primaryStage.show();
             });
         }).start();
     }
 
-    public void initWelcomeScene() {
+    public Scene initWelcomeScene() { // Change the return type to Scene
         primaryStage.setTitle("Prodigy Task Manager");
 
         VBox welcomeLayout = new VBox(10);
@@ -72,10 +71,12 @@ public class Main extends Application {
         welcomeLayout.getChildren().addAll(welcomeLabel, loginButton, exitButton);
 
         Scene welcomeScene = new Scene(welcomeLayout, 400, 300);
-        primaryStage.setScene(welcomeScene);
+        // Remove this line: primaryStage.setScene(welcomeScene);
 
         // Apply fade-in transition
         applyFadeInTransition(welcomeLayout);
+
+        return welcomeScene; // Return the welcome scene
     }
 
     private void showLoginOptions() {
@@ -99,7 +100,7 @@ public class Main extends Application {
 
         Button backButton = new Button("Back");
         styleButton(backButton);
-        backButton.setOnAction(e -> initWelcomeScene());
+        backButton.setOnAction(e -> primaryStage.setScene(initWelcomeScene())); // Use the initWelcomeScene method to get the scene
 
         loginOptionsLayout.getChildren().addAll(loginLabel, adminLoginButton, pmLoginButton, employeeLoginButton, backButton);
 
@@ -128,11 +129,23 @@ public class Main extends Application {
         fadeTransition.play();
     }
 
-     public void showAdminMenu() {
-        AdminMenu adminMenu = new AdminMenu(primaryStage, taskManager, this);
-        adminMenu.showAdminMenu();
+    public void showAdminMenu() {
+        if (primaryStage != null) {
+            AdminMenu adminMenu = new AdminMenu(primaryStage, taskManager, this);
+            adminMenu.showAdminMenu();
+        } else {
+            System.err.println("primaryStage is null when attempting to show admin menu.");
+        }
     }
 
+    public void showProjectManagerMenu() {
+        if (primaryStage != null) {
+            ProjectmanagerMenu projectManagerMenu = new ProjectmanagerMenu(primaryStage, taskManager, this);
+            projectManagerMenu.showProjectManagerMenu();
+        } else {
+            System.err.println("primaryStage is null when attempting to show project manager menu.");
+        }
+    }
 
     public static void main(String[] args) {
         launch(args);
